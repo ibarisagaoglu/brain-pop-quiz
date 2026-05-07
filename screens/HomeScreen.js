@@ -1,52 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import ScoreCard from '../components/ScoreCard';
+import { useAppContext } from '../context/AppContext';
 
 const FALLBACK_TEXT = 'Oops! Something went wrong. Please restart the app.';
 
 export default function HomeScreen({ navigation }) {
   const [bestScore, setBestScore] = useState(0);
   const [showResetModal, setShowResetModal] = useState(false);
+  const { soundEnabled, toggleSound, authUser, guestMode } = useAppContext();
 
-  useEffect(() => {
-    const loadBest = async () => {
-      try {
-        const value = await AsyncStorage.getItem('bestScore_mixed');
-        setBestScore(Number(value || 0));
-      } catch (error) {
-        console.log('Best score load failed');
-        setBestScore(0);
-      }
-    };
-    loadBest();
-  }, []);
-
-  const goToCategories = () => {
-    try {
-      navigation.navigate('Categories');
-    } catch (error) {
-      console.log('Navigation failed');
-    }
-  };
-
-  const startQuickPlay = () => {
-    try {
-      navigation.navigate('Quiz', { category: 'mixed' });
-    } catch (error) {
-      console.log('Navigation failed');
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      const loadBest = async () => {
+        try {
+          const value = await AsyncStorage.getItem('bestScore_mixed');
+          setBestScore(Number(value || 0));
+        } catch (error) {
+          console.log('Best score load failed');
+          setBestScore(0);
+        }
+      };
+      loadBest();
+    }, [])
+  );
 
   const resetScores = async () => {
     try {
       const keys = await AsyncStorage.getAllKeys();
       const scoreKeys = keys.filter((key) => key.startsWith('bestScore_'));
-      if (scoreKeys.length) {
-        await AsyncStorage.multiRemove(scoreKeys);
-      }
+      if (scoreKeys.length) await AsyncStorage.multiRemove(scoreKeys);
       setBestScore(0);
     } catch (error) {
       console.log('Score reset failed');
@@ -55,25 +42,59 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const level = authUser?.level || 1;
+  const xp = authUser?.xp || 0;
+  const levelProgress = ((xp % 1000) / 1000) * 100;
+
   try {
     return (
       <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.container}>
         <StatusBar style="light" />
+        <View style={styles.headerRow}>
+          <Pressable style={styles.iconButton} onPress={toggleSound}>
+            <Text style={styles.iconText}>{soundEnabled ? '🔊' : '🔇'}</Text>
+          </Pressable>
+          <View style={styles.rightHeader}>
+            {authUser ? (
+              <>
+                <Image source={{ uri: authUser.photoURL || 'https://i.pravatar.cc/80' }} style={styles.avatar} />
+                <Text style={styles.level}>Lv. {level}</Text>
+              </>
+            ) : null}
+            <Pressable style={styles.iconButton} onPress={() => navigation.navigate('Settings')}>
+              <Text style={styles.iconText}>⚙️</Text>
+            </Pressable>
+          </View>
+        </View>
+
         <Text style={styles.emoji}>🧠</Text>
         <Text style={styles.title}>Brain Pop Quiz</Text>
         <Text style={styles.subtitle}>Test your knowledge!</Text>
 
-        <Pressable style={styles.primaryButton} onPress={goToCategories}>
+        {authUser ? (
+          <View style={styles.xpCard}>
+            <Text style={styles.xpText}>XP: {xp} / {(Math.floor(xp / 1000) + 1) * 1000}</Text>
+            <View style={styles.xpTrack}><View style={[styles.xpFill, { width: `${levelProgress}%` }]} /></View>
+          </View>
+        ) : null}
+
+        {guestMode || !authUser ? (
+          <Pressable style={styles.banner} onPress={() => navigation.navigate('AuthFlow', { screen: 'Login' })}>
+            <Text style={styles.bannerText}>Sign in to save scores</Text>
+          </Pressable>
+        ) : null}
+
+        <Pressable style={styles.primaryButton} onPress={() => navigation.navigate('Categories')}>
           <Text style={styles.buttonText}>Start Game</Text>
         </Pressable>
 
-        <Pressable style={styles.secondaryButton} onPress={startQuickPlay}>
+        <Pressable style={styles.secondaryButton} onPress={() => navigation.navigate('QuestionCount', { category: 'mixed' })}>
           <Text style={styles.buttonText}>Quick Play</Text>
         </Pressable>
 
         <Pressable onLongPress={() => setShowResetModal(true)}>
           <View pointerEvents="none">
-            <ScoreCard title="Best Mixed Score (Long press to reset)" score={`${bestScore} / 150`} />
+            <ScoreCard title="Best Mixed Score (Long press to reset)" score={`${bestScore}`} />
           </View>
         </Pressable>
 
@@ -103,9 +124,21 @@ export default function HomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  headerRow: { position: 'absolute', top: 52, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  rightHeader: { flexDirection: 'row', alignItems: 'center' },
+  avatar: { width: 34, height: 34, borderRadius: 17, marginRight: 8, borderWidth: 1, borderColor: '#fff' },
+  level: { color: '#fff', marginRight: 8, fontFamily: 'Nunito_700Bold' },
+  iconButton: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 999, paddingVertical: 8, paddingHorizontal: 10 },
+  iconText: { fontSize: 16 },
   emoji: { fontSize: 64, marginBottom: 12 },
   title: { color: '#fff', fontFamily: 'Nunito_700Bold', fontSize: 36, textAlign: 'center' },
-  subtitle: { color: 'rgba(255,255,255,0.8)', fontFamily: 'Nunito_400Regular', fontSize: 16, marginBottom: 22 },
+  subtitle: { color: 'rgba(255,255,255,0.8)', fontFamily: 'Nunito_400Regular', fontSize: 16, marginBottom: 16 },
+  xpCard: { width: '100%', marginBottom: 12 },
+  xpText: { color: '#fff', fontFamily: 'Nunito_700Bold', marginBottom: 6 },
+  xpTrack: { height: 10, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 999 },
+  xpFill: { height: '100%', backgroundColor: '#4CAF50', borderRadius: 999 },
+  banner: { width: '100%', backgroundColor: '#FFC107', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 12 },
+  bannerText: { color: '#111', textAlign: 'center', fontFamily: 'Nunito_700Bold' },
   primaryButton: { backgroundColor: '#4CAF50', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 30, width: '100%', marginBottom: 12 },
   secondaryButton: { backgroundColor: '#3949AB', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 30, width: '100%', marginBottom: 12 },
   buttonText: { color: '#fff', textAlign: 'center', fontFamily: 'Nunito_700Bold', fontSize: 18 },

@@ -15,21 +15,26 @@ export default function AnswerButton({ label, text, onPress, status }) {
   const styleForStatus = {
     correct: styles.correct,
     wrong: styles.wrong,
+    revealed: styles.revealed,
     disabled: styles.disabled
   }[status] || styles.default;
 
-  const marker = status === 'correct' ? ' ✓' : status === 'wrong' ? ' ✕' : '';
+  const marker = status === 'correct'
+    ? ' ✓'
+    : status === 'wrong'
+      ? ' ✗'
+      : '';
 
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        disabled={status === 'disabled' || status === 'correct' || status === 'wrong'}
+        disabled={status === 'disabled' || status === 'correct' || status === 'wrong' || status === 'revealed'}
         onPress={onPress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         style={[styles.button, styleForStatus]}
       >
-        <Text style={styles.label}>{label}. {text}{marker}</Text>
+        <Text style={[styles.label, (status === 'correct' || status === 'wrong' || status === 'revealed') && styles.lightLabel]}>{label}. {text}{marker}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -51,13 +56,19 @@ const styles = StyleSheet.create({
   wrong: {
     backgroundColor: '#F44336'
   },
+  revealed: {
+    backgroundColor: '#4CAF50'
+  },
   disabled: {
     backgroundColor: '#9E9E9E',
-    opacity: 0.6
+    opacity: 0.5
   },
   label: {
     color: '#111111',
     fontFamily: 'Nunito_700Bold',
     fontSize: 16
+  },
+  lightLabel: {
+    color: '#ffffff'
   }
 });

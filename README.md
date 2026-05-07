@@ -1,77 +1,48 @@
 # Brain Pop Quiz
 
-> A fun, free trivia quiz for all ages — no account needed, fully offline!
-
-## About
-Brain Pop Quiz is a colorful mobile trivia game built with React Native and
-Expo SDK 54. Choose from 6 categories or jump into a quick mixed game.
-Answer 10 questions, beat your best score, and challenge your friends!
+Brain Pop Quiz is a React Native + Expo SDK 54 trivia app with category quizzes,
+authentication-ready Firebase integration, sound effects, social foundations, and
+multiplayer room scaffolding.
 
 ## Features
-- 6 categories: Animals, Science, Geography, Sports, Food, History
-- 30 questions with more coming soon
-- 15 second timer per question with fast answer bonus
-- Best score saved per category
-- Works fully offline — no account needed
-- Colorful gradients and smooth animations
-- Haptic feedback on correct and wrong answers
+- 26 categories and 2,600 total questions (100 per category)
+- Question count selector (10–100, step 5)
+- Dynamic timer scaling per selected question count
+- Correct/wrong/revealed answer states with visual indicators
+- AsyncStorage best score tracking by category and mixed mode
+- Sound effects system with persisted mute/unmute toggle
+- Auth flow: Google sign-in + profile setup
+- Social screens: leaderboard, friends, profile
+- Multiplayer foundation: room creation, lobby, quiz, result
+- Bottom-tab navigation with guest access restrictions for social tabs
 
-## Screenshots
-_Coming soon_
+## Firebase Setup Instructions
+1. Create a Firebase project at https://console.firebase.google.com.
+2. Enable Authentication (Google), Firestore, Realtime Database, and Storage.
+3. Copy your Firebase web/native config values.
+4. Open `/firebase/config.js` and replace placeholder values in `firebaseConfig`.
+5. Add Google OAuth client ID to `utils/auth.js` (`YOUR_GOOGLE_WEB_CLIENT_ID`).
+6. Configure Firebase rules based on your security model.
+7. Build native app (`npx expo run:android` / `npx expo run:ios`) for full RN Firebase support.
+8. Review `/firebase/firestore-schema.js` for expected collection/document structure.
 
-## Tech Stack
-- Expo SDK 54
-- React Native 0.79.6
-- React Navigation v7
-- AsyncStorage
-- expo-haptics
-- expo-linear-gradient
-- Nunito Google Font
-
-## Getting Started
-git clone https://github.com/ibarisagaoglu/brain-pop-quiz.git
-cd brain-pop-quiz
+## Development
+```bash
 npm install
 npx expo start
+```
 
-Then scan the QR code with Expo Go app on your phone.
+## Validation
+```bash
+npx expo install --fix
+npx expo export --platform web
+```
+Expected: `Exported: dist`
 
-## How to Add Questions
-Open data/questions.js and add a new object:
-{
-  id: 31,
-  category: 'Animals',
-  question: 'Your question here?',
-  emoji: '🐘',
-  options: ['Option A', 'Option B', 'Option C', 'Option D'],
-  answer: 'Option A'
-}
-
-## Roadmap
-- [ ] Dark mode
-- [ ] Multiplayer mode
-- [ ] Global leaderboard
-- [ ] Sound effects
-- [ ] More categories
-- [ ] Daily challenge mode
-
-## Contributing
-1. Fork the repository
-2. Create a branch: git checkout -b feature/my-feature
-3. Commit your changes: git commit -m 'Add my feature'
-4. Push: git push origin feature/my-feature
-5. Open a Pull Request
-
-## License
-MIT
-
-## FINAL VALIDATION CHECKLIST (must all pass before submitting PR):
-1. Run: npx expo install --fix — confirm 0 version mismatches
-2. Run: npx expo export --platform web — confirm "Exported to dist/"
-3. Confirm these files exist: App.js, app.json, package.json, metro.config.js,
-   babel.config.js, screens/HomeScreen.js, screens/CategoriesScreen.js,
-   screens/QuizScreen.js, screens/ResultScreen.js, components/AnswerButton.js,
-   components/ProgressBar.js, components/ScoreCard.js, data/questions.js,
-   utils/helpers.js, assets/icon.png, assets/adaptive-icon.png, assets/splash.png
-4. CodeQL scan: 0 alerts
-5. No file references external paths outside this repository
+## Updated Roadmap
+- [x] Expanded categories and dynamic quiz setup
+- [x] Firebase-ready auth/data architecture
+- [x] Sound, social, and multiplayer foundations
+- [ ] Full production Firebase auth token exchange
+- [ ] Complete realtime multiplayer gameplay sync and anti-cheat
+- [ ] Push notifications and daily challenge events

@@ -1,3 +1,19 @@
+export const CATEGORIES = [
+  'Animals', 'Science', 'Geography', 'Sports', 'Food', 'History',
+  'Mathematics', 'Technology', 'Movies', 'Music', 'Art', 'Literature',
+  'Space', 'Nature', 'Human Body', 'Languages', 'Religion', 'Mythology',
+  'Politics', 'Economics', 'Fashion', 'Architecture', 'Transportation',
+  'Philosophy', 'Psychology', 'Games'
+];
+
+const categoryEmojiMap = {
+  Animals: '🐾', Science: '🔬', Geography: '🌍', Sports: '🏅', Food: '🍔', History: '📜',
+  Mathematics: '➗', Technology: '💻', Movies: '🎬', Music: '🎵', Art: '🎨', Literature: '📚',
+  Space: '🚀', Nature: '🌿', 'Human Body': '🧠', Languages: '🗣️', Religion: '⛪', Mythology: '⚡',
+  Politics: '🏛️', Economics: '💹', Fashion: '👗', Architecture: '🏗️', Transportation: '🚆',
+  Philosophy: '🤔', Psychology: '🧩', Games: '🎮', mixed: '🎯'
+};
+
 export const shuffleArray = (array) => {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i -= 1) {
@@ -7,6 +23,8 @@ export const shuffleArray = (array) => {
   return result;
 };
 
+export const getTimerPerQuestion = (questionCount) => Math.max(3, Math.round(300 / questionCount));
+
 export const getRandomQuestions = (allQuestions, category, count) => {
   const filtered = category === 'mixed'
     ? allQuestions
@@ -15,16 +33,18 @@ export const getRandomQuestions = (allQuestions, category, count) => {
 };
 
 export const calculateScore = (isCorrect, timeLeft) => {
-  if (!isCorrect || timeLeft <= 0) {
-    return 0;
-  }
-  if (timeLeft > 10) {
-    return 15;
-  }
-  if (timeLeft >= 5) {
-    return 10;
-  }
+  if (!isCorrect || timeLeft <= 0) return 0;
+  if (timeLeft > 10) return 15;
+  if (timeLeft >= 5) return 10;
   return 5;
+};
+
+export const getDifficultyBreakdown = (allQuestions, category, count) => {
+  const picked = getRandomQuestions(allQuestions, category, count);
+  return picked.reduce((acc, item) => {
+    acc[item.difficulty] = (acc[item.difficulty] || 0) + 1;
+    return acc;
+  }, { easy: 0, medium: 0, hard: 0 });
 };
 
 export const getGrade = (percentage) => {
@@ -48,15 +68,4 @@ export const getCategoryGradient = (category) => {
   return map[category] || ['#1a1a2e', '#16213e'];
 };
 
-export const getCategoryEmoji = (category) => {
-  const map = {
-    Animals: '🐾',
-    Science: '🔬',
-    Geography: '🌍',
-    Sports: '🏅',
-    Food: '🍔',
-    History: '📜',
-    mixed: '🎯'
-  };
-  return map[category] || '🧠';
-};
+export const getCategoryEmoji = (category) => categoryEmojiMap[category] || '🧠';

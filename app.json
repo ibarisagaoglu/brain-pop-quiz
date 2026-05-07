@@ -22,6 +22,10 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/icon.png"
-    }
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ]
   }
 }
