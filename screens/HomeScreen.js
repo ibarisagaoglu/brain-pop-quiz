@@ -73,7 +73,7 @@ export default function HomeScreen({ navigation }) {
 
         <Pressable onLongPress={() => setShowResetModal(true)}>
           <View pointerEvents="none">
-            <ScoreCard title="Best Mixed Score (Long press to reset)" score={`${bestScore} / 100`} />
+            <ScoreCard title="Best Mixed Score (Long press to reset)" score={`${bestScore} / 150`} />
           </View>
         </Pressable>
 

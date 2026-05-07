@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -53,12 +53,41 @@ export default function QuizScreen({ route, navigation }) {
     }
   }, [timeLeft, pulseAnim]);
 
-  const clearTimer = () => {
+  const clearTimer = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  };
+  }, []);
+
+  const nextStep = useCallback((nextScore) => {
+    setTimeout(() => {
+      if (index >= quizQuestions.length - 1) {
+        try {
+          navigation.replace('Result', {
+            score: nextScore,
+            total: quizQuestions.length * 15,
+            category
+          });
+        } catch (error) {
+          console.log('Navigation failed');
+        }
+        return;
+      }
+      setIndex((prev) => prev + 1);
+    }, 1500);
+  }, [index, quizQuestions.length, navigation, category]);
+
+  const onTimeout = useCallback(async () => {
+    setButtonsDisabled(true);
+    setSelected('__timeout__');
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    } catch (error) {
+      console.log('Haptics failed');
+    }
+    nextStep(score);
+  }, [nextStep, score]);
 
   useEffect(() => {
     setTimeLeft(15);
@@ -78,41 +107,11 @@ export default function QuizScreen({ route, navigation }) {
     }, 1000);
 
     return () => clearTimer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [index, clearTimer, onTimeout]);
 
   useEffect(() => () => clearTimer(), []);
 
-  const nextStep = (nextScore) => {
-    setTimeout(() => {
-      if (index >= quizQuestions.length - 1) {
-        try {
-          navigation.replace('Result', {
-            score: nextScore,
-            total: quizQuestions.length * 10,
-            category
-          });
-        } catch (error) {
-          console.log('Navigation failed');
-        }
-        return;
-      }
-      setIndex((prev) => prev + 1);
-    }, 1500);
-  };
-
-  const onTimeout = async () => {
-    setButtonsDisabled(true);
-    setSelected('__timeout__');
-    try {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    } catch (error) {
-      console.log('Haptics failed');
-    }
-    nextStep(score);
-  };
-
-  const onAnswer = async (choice) => {
+  const onAnswer = useCallback(async (choice) => {
     if (buttonsDisabled || !currentQuestion) return;
     clearTimer();
     setButtonsDisabled(true);
@@ -140,7 +139,7 @@ export default function QuizScreen({ route, navigation }) {
     }
 
     nextStep(nextScore);
-  };
+  }, [buttonsDisabled, currentQuestion, clearTimer, timeLeft, score, scoreAnim, nextStep]);
 
   const getStatus = (option) => {
     if (!selected) return buttonsDisabled ? 'disabled' : null;

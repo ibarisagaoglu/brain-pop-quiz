@@ -16,7 +16,13 @@ export default function ResultScreen({ route, navigation }) {
   const star2 = useRef(new Animated.Value(0)).current;
   const star3 = useRef(new Animated.Value(0)).current;
 
-  const starCount = percentage > 80 ? 3 : percentage >= 50 ? 2 : 1;
+  const calculateStarCount = (value) => {
+    if (value > 80) return 3;
+    if (value >= 50) return 2;
+    return 1;
+  };
+
+  const starCount = calculateStarCount(percentage);
 
   useEffect(() => {
     const run = async () => {
@@ -90,7 +96,7 @@ export default function ResultScreen({ route, navigation }) {
           ))}
         </View>
 
-        <Text style={styles.finalScore}>{score} / 100</Text>
+        <Text style={styles.finalScore}>{score} / {total}</Text>
         <Text style={styles.grade}>{percentage}% • {getGrade(percentage)}</Text>
 
         {newRecord ? <Text style={styles.badge}>New Record!</Text> : null}
