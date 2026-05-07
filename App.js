@@ -26,6 +26,9 @@ import MultiplayerResultScreen from './screens/multiplayer/MultiplayerResultScre
 import SettingsScreen from './screens/settings/SettingsScreen';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { loadSounds, unloadSounds } from './utils/sounds';
+import { SettingsProvider } from './utils/settings';
+import { LanguageProvider } from './utils/LanguageContext';
+import { useTranslation } from './utils/i18n';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -70,6 +73,7 @@ function AuthStackNavigator() {
 
 function MainTabs() {
   const { authUser, guestMode } = useAppContext();
+  const { t } = useTranslation();
   const locked = guestMode || !authUser;
 
   return (
@@ -84,16 +88,18 @@ function MainTabs() {
             HomeTab: 'home-outline',
             LeaderboardTab: 'trophy-outline',
             FriendsTab: 'people-outline',
-            ProfileTab: 'person-outline'
+            ProfileTab: 'person-outline',
+            SettingsTab: 'settings-outline'
           };
           return <Ionicons name={iconMap[route.name]} size={size} color={color} />;
         }
       })}
     >
-      <Tabs.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: 'Home' }} />
-      <Tabs.Screen name="LeaderboardTab" component={locked ? GuestLockScreen : LeaderboardScreen} options={{ title: 'Leaderboard' }} />
-      <Tabs.Screen name="FriendsTab" component={locked ? GuestLockScreen : FriendsScreen} options={{ title: 'Friends' }} />
-      <Tabs.Screen name="ProfileTab" component={locked ? GuestLockScreen : ProfileScreen} options={{ title: 'Profile' }} />
+      <Tabs.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: t('nav_home') }} />
+      <Tabs.Screen name="LeaderboardTab" component={locked ? GuestLockScreen : LeaderboardScreen} options={{ title: t('nav_leaderboard') }} />
+      <Tabs.Screen name="FriendsTab" component={locked ? GuestLockScreen : FriendsScreen} options={{ title: t('nav_friends') }} />
+      <Tabs.Screen name="ProfileTab" component={locked ? GuestLockScreen : ProfileScreen} options={{ title: t('nav_profile') }} />
+      <Tabs.Screen name="SettingsTab" component={SettingsScreen} options={{ title: t('nav_settings') }} />
     </Tabs.Navigator>
   );
 }
@@ -161,9 +167,13 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AppProvider>
-        <AppNavigation />
-      </AppProvider>
+      <SettingsProvider>
+        <LanguageProvider>
+          <AppProvider>
+            <AppNavigation />
+          </AppProvider>
+        </LanguageProvider>
+      </SettingsProvider>
     </SafeAreaProvider>
   );
 }

@@ -3,10 +3,14 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import questions from '../data/questions';
 import { getDifficultyBreakdown, getTimerPerQuestion } from '../utils/helpers';
+import { useTranslation } from '../utils/i18n';
+import { useSettings } from '../utils/settings';
 
 export default function QuestionCountScreen({ navigation, route }) {
   const category = route?.params?.category || 'mixed';
-  const [questionCount, setQuestionCount] = useState(10);
+  const { settings } = useSettings();
+  const { t } = useTranslation();
+  const [questionCount, setQuestionCount] = useState(settings.settings_default_question_count || 10);
 
   const timerPerQuestion = useMemo(() => getTimerPerQuestion(questionCount), [questionCount]);
   const estimatedTime = timerPerQuestion * questionCount;
@@ -17,8 +21,8 @@ export default function QuestionCountScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{category} Quiz Setup</Text>
-      <Text style={styles.value}>Questions: {questionCount}</Text>
+      <Text style={styles.title}>{category} {t('question_setup_title')}</Text>
+      <Text style={styles.value}>{t('question_setup_questions')}: {questionCount}</Text>
       <Slider
         value={questionCount}
         minimumValue={10}
@@ -31,18 +35,18 @@ export default function QuestionCountScreen({ navigation, route }) {
       />
 
       <View style={styles.card}>
-        <Text style={styles.cardText}>Timer per question: {timerPerQuestion}s</Text>
-        <Text style={styles.cardText}>Estimated total: {estimatedTime}s</Text>
-        <Text style={styles.cardText}>Easy: {breakdown.easy}</Text>
-        <Text style={styles.cardText}>Medium: {breakdown.medium}</Text>
-        <Text style={styles.cardText}>Hard: {breakdown.hard}</Text>
+        <Text style={styles.cardText}>{t('question_setup_timer_per_question')}: {timerPerQuestion}s</Text>
+        <Text style={styles.cardText}>{t('question_setup_estimated_total')}: {estimatedTime}s</Text>
+        <Text style={styles.cardText}>{t('question_setup_easy')}: {breakdown.easy}</Text>
+        <Text style={styles.cardText}>{t('question_setup_medium')}: {breakdown.medium}</Text>
+        <Text style={styles.cardText}>{t('question_setup_hard')}: {breakdown.hard}</Text>
       </View>
 
       <Pressable
         style={styles.button}
         onPress={() => navigation.navigate('Quiz', { category, questionCount })}
       >
-        <Text style={styles.buttonText}>Start Quiz</Text>
+        <Text style={styles.buttonText}>{t('question_setup_start')}</Text>
       </Pressable>
     </View>
   );

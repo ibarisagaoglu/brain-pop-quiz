@@ -52,6 +52,46 @@ export const signOut = async () => {
   }
 };
 
+export const disconnectAccount = async () => {
+  try {
+    await signOut();
+    return true;
+  } catch (error) {
+    console.log('Disconnect failed');
+    return false;
+  }
+};
+
+const deleteSubCollection = async (docRef, subPath) => {
+  const collectionRef = docRef.collection(subPath);
+  const snapshot = await collectionRef.get();
+  if (snapshot.empty) return;
+  const batch = db.batch();
+  snapshot.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+};
+
+export const deleteUserData = async (uid) => {
+  if (!db || !uid) return false;
+
+  try {
+    const userRef = db.collection('users').doc(uid);
+    const scoresRef = db.collection('scores').doc(uid);
+
+    await deleteSubCollection(scoresRef, 'categoryScores');
+
+    await Promise.all([
+      userRef.delete().catch(() => null),
+      scoresRef.delete().catch(() => null)
+    ]);
+
+    return true;
+  } catch (error) {
+    console.log('Delete user data failed');
+    return false;
+  }
+};
+
 export const checkUsernameAvailable = async (username) => {
   const normalized = (username || '').trim().toLowerCase();
   if (!normalized) return false;

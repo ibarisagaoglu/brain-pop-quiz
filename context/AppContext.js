@@ -3,12 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AppContext = createContext(null);
 
-const SOUND_KEY = 'soundEnabled';
 const USER_KEY = 'authUser';
 const GUEST_KEY = 'guestMode';
 
 export function AppProvider({ children }) {
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [authUser, setAuthUser] = useState(null);
   const [guestMode, setGuestMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -16,16 +14,14 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const hydrate = async () => {
       try {
-        const [sound, user, guest] = await Promise.all([
-          AsyncStorage.getItem(SOUND_KEY),
+        const [user, guest] = await Promise.all([
           AsyncStorage.getItem(USER_KEY),
           AsyncStorage.getItem(GUEST_KEY)
         ]);
-        if (sound !== null) setSoundEnabled(sound === 'true');
         if (user) setAuthUser(JSON.parse(user));
         if (guest === 'true') setGuestMode(true);
       } catch (error) {
-        console.log('Failed to restore app preferences');
+        console.log('Failed to restore user state');
       } finally {
         setLoading(false);
       }
@@ -33,16 +29,6 @@ export function AppProvider({ children }) {
 
     hydrate();
   }, []);
-
-  const toggleSound = async () => {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    try {
-      await AsyncStorage.setItem(SOUND_KEY, String(next));
-    } catch (error) {
-      console.log('Failed to save sound preference');
-    }
-  };
 
   const signInAsGuest = async () => {
     setGuestMode(true);
@@ -76,14 +62,12 @@ export function AppProvider({ children }) {
 
   const value = useMemo(() => ({
     loading,
-    soundEnabled,
-    toggleSound,
     authUser,
     guestMode,
     signInAsGuest,
     setSignedInUser,
     signOutLocal
-  }), [loading, soundEnabled, authUser, guestMode]);
+  }), [loading, authUser, guestMode]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

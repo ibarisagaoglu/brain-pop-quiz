@@ -5,7 +5,14 @@ const soundCache = {
   correct: null,
   wrong: null,
   timeout: null,
-  gameOver: null
+  gameOver: null,
+  music: null
+};
+
+let audioSettings = {
+  soundEnabled: true,
+  musicEnabled: false,
+  volume: 80
 };
 
 const SAMPLE_RATE = 44100;
@@ -38,13 +45,46 @@ const createToneUri = (frequency, durationMs, volume = 0.45) => {
   return `data:audio/wav;base64,${data.toString('base64')}`;
 };
 
+const getVolumeUnit = () => Math.max(0, Math.min(1, (audioSettings.volume || 0) / 100));
+
 const safePlay = async (sound) => {
-  if (!sound) return;
+  if (!sound || !audioSettings.soundEnabled) return;
   try {
+    await sound.setVolumeAsync(getVolumeUnit());
     await sound.replayAsync();
   } catch (error) {
     console.log('Audio playback failed');
   }
+};
+
+const syncBackgroundMusic = async () => {
+  const musicSound = soundCache.music;
+  if (!musicSound) return;
+
+  try {
+    if (audioSettings.musicEnabled) {
+      await musicSound.setVolumeAsync(Math.max(0.05, getVolumeUnit() * 0.25));
+      const status = await musicSound.getStatusAsync();
+      if (!status.isLoaded) return;
+      if (!status.isPlaying) {
+        await musicSound.playAsync();
+      }
+    } else {
+      await musicSound.stopAsync();
+    }
+  } catch (error) {
+    console.log('Background music sync failed');
+  }
+};
+
+export const setAudioSettings = ({ soundEnabled, musicEnabled, volume }) => {
+  audioSettings = {
+    soundEnabled,
+    musicEnabled,
+    volume
+  };
+
+  syncBackgroundMusic();
 };
 
 export const loadSounds = async () => {
@@ -55,17 +95,21 @@ export const loadSounds = async () => {
       shouldDuckAndroid: true
     });
 
-    const [correct, wrong, timeout, gameOver] = await Promise.all([
+    const [correct, wrong, timeout, gameOver, music] = await Promise.all([
       Audio.Sound.createAsync({ uri: createToneUri(880, 150) }),
       Audio.Sound.createAsync({ uri: createToneUri(220, 180) }),
       Audio.Sound.createAsync({ uri: createToneUri(440, 120) }),
-      Audio.Sound.createAsync({ uri: createToneUri(660, 350) })
+      Audio.Sound.createAsync({ uri: createToneUri(660, 350) }),
+      Audio.Sound.createAsync({ uri: createToneUri(330, 1400, 0.18) }, { isLooping: true, shouldPlay: false })
     ]);
 
     soundCache.correct = correct.sound;
     soundCache.wrong = wrong.sound;
     soundCache.timeout = timeout.sound;
     soundCache.gameOver = gameOver.sound;
+    soundCache.music = music.sound;
+
+    await syncBackgroundMusic();
   } catch (error) {
     console.log('Sound preload failed');
   }
